@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Animated Dice (6 sides)</title>
+<style>
+  :root{ --size:160px; --bg:#f7f7f8; --accent:#111;}
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff var(--bg),#f0f4f8);padding:24px}
+  .stage{width:var(--size);height:var(--size);perspective:900px;display:flex;flex-direction:column;gap:12px;align-items:center}
+  .cube{
+    width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform 1s cubic-bezier(.2,.8,.2,1);
+    cursor:pointer;user-select:none;
+  }
+  .face{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:#fff;border-radius:14px;box-shadow:0 10px 20px rgba(10,10,20,0.08);
+    font-size:calc(var(--size) * 0.36);color:var(--accent);font-weight:700;
+  }
+  .f1{ transform: rotateY(0deg) translateZ(calc(var(--size)/2)); }
+  .f2{ transform: rotateY(90deg) translateZ(calc(var(--size)/2)); }
+  .f3{ transform: rotateY(180deg) translateZ(calc(var(--size)/2)); }
+  .f4{ transform: rotateY(-90deg) translateZ(calc(var(--size)/2)); }
+  .f5{ transform: rotateX(90deg) translateZ(calc(var(--size)/2)); }
+  .f6{ transform: rotateX(-90deg) translateZ(calc(var(--size)/2)); }
+  .roll-btn{background:#111;color:#fff;padding:8px 12px;border-radius:10px;border:0;font-weight:600;cursor:pointer}
+  .controls{display:flex;gap:8px;align-items:center}
+  .hint{font-size:13px;color:#666}
+  @media (max-width:420px){:root{--size:120px}}
+</style>
+</head>
+<body>
+  <div class="stage" aria-live="polite">
+    <div id="cube" class="cube" role="button" tabindex="0" aria-label="Roll dice (press Enter or Space)">
+      <div class="face f1">1</div>
+      <div class="face f2">2</div>
+      <div class="face f3">3</div>
+      <div class="face f4">4</div>
+      <div class="face f5">5</div>
+      <div class="face f6">6</div>
+    </div>
+
+    <div class="controls">
+      <button id="roll" class="roll-btn">Roll</button>
+      <div class="hint">Tap the die or press Roll</div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const cube = document.getElementById('cube');
+  const rollBtn = document.getElementById('roll');
+
+  const faceTransforms = {
+    1: {x:0,   y:0},
+    2: {x:0,   y:-90},
+    3: {x:0,   y:180},
+    4: {x:0,   y:90},
+    5: {x:90,  y:0},
+    6: {x:-90, y:0}
+  };
+
+  let current = {x:0,y:0};
+
+  function rollOnce(){
+    const n = Math.floor(Math.random()*6)+1;
+    const extraX = (Math.floor(Math.random()*3)+1) * 360;
+    const extraY = (Math.floor(Math.random()*3)+1) * 360;
+
+    const target = faceTransforms[n];
+    current.x = current.x + extraX + target.x;
+    current.y = current.y + extraY + target.y;
+
+    cube.style.transform = `rotateX(${current.x}deg) rotateY(${current.y}deg)`;
+
+    cube.setAttribute('aria-label', 'Rolled ' + n);
+    cube.dispatchEvent(new CustomEvent('rolled', {detail:{value:n}}));
+    return n;
+  }
+
+  rollBtn.addEventListener('click', rollOnce);
+  cube.addEventListener('click', rollOnce);
+  cube.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); rollOnce(); }
+  });
+
+  cube.addEventListener('rolled', (ev)=> console.log('Dice value:', ev.detail.value));
+})();
+</script>
+</body>
+</html>
